@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ley de Ampère · Solenoide y toroide</title>
+<style>
+:root{
+  --bg:#070b17; --panel:#0f1629; --panel2:#141d36; --line:#24304f;
+  --text:#e8edf7; --muted:#8d99b8;
+  --I:#ffb21e; --B:#22d3ee; --amp:#ff4fa3; --enc:#a3e635;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--text); line-height:1.45;
+  background:radial-gradient(1200px 600px at 75% -10%,#13204a 0%,transparent 60%),var(--bg);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+}
+header{padding:22px 28px 6px;max-width:1440px;margin:0 auto}
+h1{margin:0;font-size:1.55rem;font-weight:650;letter-spacing:.2px}
+h1 .a{color:var(--B)}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+.tabs{display:flex;gap:6px;max-width:1440px;margin:14px auto 0;padding:0 28px;border-bottom:1px solid var(--line)}
+.tab{
+  background:none;border:1px solid transparent;border-bottom:none;color:var(--muted);
+  padding:10px 20px;font-size:1rem;cursor:pointer;border-radius:10px 10px 0 0;font-weight:600;
+  position:relative;top:1px;font-family:inherit
+}
+.tab:hover{color:var(--text)}
+.tab[aria-selected=true]{background:var(--panel);color:var(--text);border-color:var(--line);border-bottom:1px solid var(--panel)}
+.tab .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:9px;background:var(--muted);vertical-align:middle}
+.tab[aria-selected=true] .dot{background:var(--I);box-shadow:0 0 9px var(--I)}
+main{max-width:1440px;margin:0 auto;padding:18px 28px 40px}
+.view{display:none}
+.view.active{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:18px}
+@media (max-width:980px){.view.active{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h3{margin:0 0 10px;font-size:.78rem;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);font-weight:700}
+canvas{width:100%;display:block;border-radius:10px;background:#060a15;touch-action:pan-y}
+#csec,#ctor{touch-action:none}
+#c3d{height:350px}#csec{height:310px}#c3dt{height:420px}#ctor{height:500px}#cgraph{height:230px}
+@media (max-width:600px){
+  header{padding:16px 14px 4px} .tabs{padding:0 14px} main{padding:14px 14px 30px}
+  h1{font-size:1.3rem} .card{padding:12px}
+  #c3d{height:250px}#csec{height:230px}#c3dt{height:270px}#ctor{height:340px}#cgraph{height:200px}
+  .tab{padding:9px 14px}
+}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:20px;height:4px;border-radius:2px;margin-right:7px;vertical-align:middle}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--amp) 0 5px,transparent 5px 8px)!important}
+.sym{font-family:"Segoe UI Symbol","Cambria Math","DejaVu Sans",sans-serif;font-size:1rem;line-height:1;color:var(--I)}
+.ctrl{margin:12px 0}
+.ctrl label{display:flex;gap:6px;font-size:.9rem;color:var(--muted);margin-bottom:4px}
+.ctrl label .v{font-family:"Cambria Math",Georgia,serif;font-style:italic;color:var(--text)}
+.ctrl label b{margin-left:auto;color:var(--text);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--I)}
+input.rB{accent-color:var(--amp)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.btn:hover{border-color:#3d4d7a}
+.btn.on{border-color:var(--B);color:var(--B)}
+.eq{
+  font-family:"Cambria Math",Cambria,Georgia,"Times New Roman",serif;font-size:1.13rem;
+  background:#0a1020;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;text-align:center
+}
+.eq.small{font-size:1rem;text-align:left}
+.eq .v{font-style:italic}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.92rem;margin:10px 0}
+.kv span:nth-child(odd){color:var(--muted)}
+.kv span:nth-child(even){font-variant-numeric:tabular-nums;text-align:right}
+.result{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+.result .big{font-size:1.35rem;font-weight:700;color:var(--B);font-variant-numeric:tabular-nums}
+.result .dir{color:var(--muted);font-size:.9rem}
+.region{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.82rem;font-weight:650;border:1px solid}
+ul.notes{margin:0;padding-left:18px;font-size:.9rem;color:#c6cee3}
+ul.notes li{margin:5px 0}
+.hint{font-size:.82rem;color:var(--muted);margin-top:8px}
+.cI{color:var(--I)} .cB{color:var(--B)} .cA{color:var(--amp)} .cE{color:var(--enc)}
+sub,sup{font-size:.7em}
+footer{max-width:1440px;margin:0 auto;padding:0 28px 26px;color:#5d6889;font-size:.8rem}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ley de Ampère: <span class="a">solenoide y toroide</span></h1>
+  <p class="sub">Sentido de la corriente, dirección del campo magnético y elección del lazo amperiano.</p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-tab="sol"><span class="dot"></span>Solenoide</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="tor"><span class="dot"></span>Toroide</button>
+</nav>
+
+<main>
+<!-- ===================== SOLENOIDE ===================== -->
+<section id="sol" class="view active" role="tabpanel">
+  <div class="col">
+    <div class="card">
+      <h3>Vista en perspectiva</h3>
+      <canvas id="c3d"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--I)"></i>Corriente <span class="cI">I</span> (sentido convencional)</span>
+        <span><i style="background:var(--B)"></i>Campo magnético <span class="cB">B</span></span>
+        <span><i style="background:rgba(34,211,238,.3)"></i>Campo exterior débil</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Corte longitudinal y lazo amperiano</h3>
+      <canvas id="csec"></canvas>
+      <div class="legend">
+        <span><span class="sym">⊙</span> corriente saliendo de la pantalla</span>
+        <span><span class="sym">⊗</span> corriente entrando a la pantalla</span>
+        <span><i class="dash"></i>Lazo amperiano (recorrido antihorario)</span>
+        <span><i style="background:var(--enc)"></i>Corriente encerrada</span>
+      </div>
+      <div class="hint">Arrastra el rectángulo magenta a lo largo del solenoide. Cambia su longitud con el control «Espiras abarcadas».</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3>Controles</h3>
+      <div class="ctrl"><label>Corriente <span class="v">I</span> <b id="sIv"></b></label>
+        <input type="range" id="sI" min="-5" max="5" step="0.1" value="2"></div>
+      <div class="ctrl"><label>Número total de espiras <span class="v">N</span> <b id="sNv"></b></label>
+        <input type="range" id="sN" min="6" max="24" step="1" value="12"></div>
+      <div class="ctrl"><label>Espiras abarcadas por el lazo <b id="sKv"></b></label>
+        <input type="range" id="sK" class="rB" min="1" max="12" step="1" value="4"></div>
+      <div class="row">
+        <button class="btn" id="sFlip">⇄ Invertir corriente</button>
+        <button class="btn on" id="sOuter">Campo exterior</button>
+        <button class="btn pauseBtn">❚❚ Pausar</button>
+      </div>
+      <div class="hint">Longitud del solenoide: L = 20 cm.</div>
+    </div>
+
+    <div class="card">
+      <h3>Ley de Ampère aplicada</h3>
+      <div class="eq">∮ <b class="cB">B</b> · d<b>l</b> = μ<sub>0</sub> <span class="v">I</span><sub>enc</sub></div>
+      <div class="eq small">
+        <span class="cA">Tramo interior:</span> <span class="v">B ℓ</span><br>
+        <span class="cA">Tramos laterales:</span> 0 &nbsp;(<b class="cB">B</b> ⊥ d<b>l</b>)<br>
+        <span class="cA">Tramo exterior:</span> ≈ 0 &nbsp;(<span class="v">B</span> ≈ 0)
+      </div>
+      <div class="eq"><span class="v">B ℓ</span> = μ<sub>0</sub> <span class="v">N</span><sub>enc</sub> <span class="v">I</span> &nbsp;⇒&nbsp; <span class="v">B</span> = μ<sub>0</sub> <span class="v">n I</span></div>
+      <div class="kv" id="solKV"></div>
+      <div class="result"><span class="big" id="solB"></span><span class="dir" id="solDir"></span></div>
+    </div>
+
+    <div class="card">
+      <h3>Cómo leer la figura</h3>
+      <ul class="notes">
+        <li><b class="cI">Regla de la mano derecha:</b> curva los dedos en el sentido de la corriente en las espiras; el pulgar indica el sentido de <b class="cB">B</b> dentro del solenoide.</li>
+        <li>En el corte, la parte superior de cada espira lleva corriente <span class="sym">⊙</span> y la inferior <span class="sym">⊗</span> (o al revés si inviertes I).</li>
+        <li>Dentro, las líneas de <b class="cB">B</b> son paralelas y equidistantes: el campo es <b>uniforme</b>. Fuera, las líneas se separan mucho, así que el campo es débil y en el solenoide ideal se toma <span class="v">B</span> ≈ 0.</li>
+        <li>Mueve o agranda el lazo: <span class="v">N</span><sub>enc</sub> y <span class="v">ℓ</span> cambian juntos, pero su cociente <span class="v">n</span> no. Por eso <span class="v">B</span> no depende de la posición.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TOROIDE ===================== -->
+<section id="tor" class="view" role="tabpanel">
+  <div class="col">
+    <div class="card">
+      <h3>Vista en perspectiva</h3>
+      <canvas id="c3dt"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--I)"></i>Espiras y corriente <span class="cI">I</span></span>
+        <span><i style="background:var(--B)"></i>Campo <span class="cB">B</span> dentro del núcleo</span>
+        <span><i style="background:rgba(80,110,190,.6)"></i>Núcleo (semitransparente)</span>
+        <span><i class="dash"></i>Lazo amperiano</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Vista superior y lazo amperiano</h3>
+      <canvas id="ctor"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--I)"></i>Espiras y corriente <span class="cI">I</span></span>
+        <span><i style="background:var(--B)"></i>Campo <span class="cB">B</span> (solo en el núcleo)</span>
+        <span><i class="dash"></i>Lazo amperiano de radio <span class="v">r</span></span>
+        <span><i style="background:var(--enc)"></i>Alambres que atraviesan el lazo</span>
+      </div>
+      <div class="hint">Toca o arrastra sobre la figura para cambiar el radio del lazo amperiano.</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3>Controles</h3>
+      <div class="ctrl"><label>Corriente <span class="v">I</span> <b id="tIv"></b></label>
+        <input type="range" id="tI" min="-5" max="5" step="0.1" value="2"></div>
+      <div class="ctrl"><label>Número de espiras <span class="v">N</span> <b id="tNv"></b></label>
+        <input type="range" id="tN" min="8" max="40" step="1" value="20"></div>
+      <div class="ctrl"><label>Radio del lazo amperiano <span class="v">r</span> <b id="tRv"></b></label>
+        <input type="range" id="tR" class="rB" min="0.5" max="13.5" step="0.1" value="7.5"></div>
+      <div class="row">
+        <button class="btn" id="tFlip">⇄ Invertir corriente</button>
+        <button class="btn pauseBtn">❚❚ Pausar</button>
+      </div>
+      <div class="hint">Radio interior a = 5 cm · radio exterior b = 10 cm.</div>
+    </div>
+
+    <div class="card">
+      <h3>Ley de Ampère aplicada</h3>
+      <div style="margin-bottom:6px"><span class="region" id="tRegion"></span></div>
+      <div class="eq">∮ <b class="cB">B</b> · d<b>l</b> = <span class="v">B</span> (2π<span class="v">r</span>) = μ<sub>0</sub> <span class="v">I</span><sub>enc</sub></div>
+      <div class="kv" id="torKV"></div>
+      <div class="result"><span class="big" id="torB"></span><span class="dir" id="torDir"></span></div>
+    </div>
+
+    <div class="card">
+      <h3>Magnitud del campo en función de r</h3>
+      <canvas id="cgraph"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Cómo leer la figura</h3>
+      <ul class="notes">
+        <li>Cada espira rodea el núcleo: la corriente sube <span class="sym">⊙</span> por el borde interior, corre hacia afuera por encima y baja <span class="sym">⊗</span> por el borde exterior.</li>
+        <li><b class="cI">Mano derecha:</b> dedos en el sentido de la corriente en una espira, pulgar en el sentido de <b class="cB">B</b>: circular, a lo largo del núcleo.</li>
+        <li><span class="v">r</span> &lt; <span class="v">a</span>: ningún alambre atraviesa el lazo ⇒ <span class="v">B</span> = 0.</li>
+        <li><span class="v">a</span> &lt; <span class="v">r</span> &lt; <span class="v">b</span>: lo atraviesan los <span class="v">N</span> alambres interiores ⇒ <span class="v">B</span> = μ<sub>0</sub><span class="v">NI</span>/(2π<span class="v">r</span>), más intenso cerca del borde interior.</li>
+        <li><span class="v">r</span> &gt; <span class="v">b</span>: <span class="v">N</span> corrientes <span class="sym">⊙</span> y <span class="v">N</span> corrientes <span class="sym">⊗</span> se cancelan ⇒ <span class="v">B</span> = 0.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+<footer>μ<sub>0</sub> = 4π × 10<sup>−7</sup> T·m/A · Modelos ideales: solenoide largo y toroide de devanado compacto.</footer>
+
+<script>
+(function(){
+"use strict";
+const mu0 = 4*Math.PI*1e-7;
+const $ = id => document.getElementById(id);
+const COL = {I:'#ffb21e', Ilight:'#fff1c9', B:'#22d3ee', A:'#ff4fa3', E:'#a3e635', muted:'#8d99b8', text:'#e8edf7'};
+const L_SOL = 0.20, A_T = 0.05, B_T = 0.10;
+const S = {I:2, N:12, k:4, j:4, outer:true};
+const T = {I:2, N:20, r:0.075};
+let tab = 'sol', paused = false, t = 0;
+
+/* ---------- utilidades de dibujo ---------- */
+function fit(c){
+  const d = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  const W = Math.round(w*d), H = Math.round(h*d);
+  if (c.width !== W || c.height !== H){ c.width = W; c.height = H; }
+  const x = c.getContext('2d');
+  x.setTransform(d,0,0,d,0,0); x.clearRect(0,0,w,h);
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  return {x, w, h};
+}
+function grid(x,w,h){
+  x.fillStyle = 'rgba(120,140,200,.09)';
+  for (let i=12;i<w;i+=24) for (let j=12;j<h;j+=24) x.fillRect(i,j,1.2,1.2);
+}
+function mk(pts){
+  const cum=[0];
+  for (let i=1;i<pts.length;i++) cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+  return {pts, cum, len:cum[cum.length-1]};
+}
+function at(p,s){
+  s = ((s % p.len) + p.len) % p.len;
+  let lo=0, hi=p.cum.length-1;
+  while (hi-lo>1){ const m=(lo+hi)>>1; if (p.cum[m]<=s) lo=m; else hi=m; }
+  const a=p.pts[lo], b=p.pts[hi], seg=(p.cum[hi]-p.cum[lo])||1, f=(s-p.cum[lo])/seg;
+  return {x:a[0]+(b[0]-a[0])*f, y:a[1]+(b[1]-a[1])*f, a:Math.atan2(b[1]-a[1], b[0]-a[0])};
+}
+function stroke(x,p,closed){
+  x.beginPath();
+  p.pts.forEach((q,i)=> i ? x.lineTo(q[0],q[1]) : x.moveTo(q[0],q[1]));
+  if (closed) x.closePath();
+  x.stroke();
+}
+function arrow(x,px,py,a,s,col){
+  x.save(); x.translate(px,py); x.rotate(a); x.fillStyle=col;
+  x.beginPath(); x.moveTo(s,0); x.lineTo(-s*.85,s*.7); x.lineTo(-s*.4,0); x.lineTo(-s*.85,-s*.7); x.closePath(); x.fill();
+  x.restore();
+}
+function flow(x,p,spacing,off,dir,col,size){
+  if (!dir) return;
+  const n = Math.max(1, Math.round(p.len/spacing)), sp = p.len/n;
+  for (let i=0;i<n;i++){
+    const q = at(p, i*sp + off*dir);
+    arrow(x, q.x, q.y, q.a + (dir<0 ? Math.PI : 0), size, col);
+  }
+}
+function cub(p0,p1,p2,p3,n){
+  n = n || 28; const r=[];
+  for (let i=0;i<=n;i++){
+    const u=i/n, v=1-u;
+    r.push([v*v*v*p0[0]+3*v*v*u*p1[0]+3*v*u*u*p2[0]+u*u*u*p3[0],
+            v*v*v*p0[1]+3*v*v*u*p1[1]+3*v*u*u*p2[1]+u*u*u*p3[1]]);
+  }
+  return r;
+}
+/* type: +1 = ⊙ (sale), -1 = ⊗ (entra), 0 = sin corriente */
+function sym(x,px,py,r,type,col,ring){
+  x.save();
+  if (ring){
+    x.strokeStyle = COL.E; x.lineWidth = 2.2; x.shadowColor = COL.E; x.shadowBlur = 12;
+    x.beginPath(); x.arc(px,py,r+4.5,0,7); x.stroke(); x.shadowBlur = 0;
+  }
+  x.fillStyle = '#0b1124'; x.strokeStyle = col; x.lineWidth = Math.max(1.6, r*.2);
+  x.beginPath(); x.arc(px,py,r,0,7); x.fill(); x.stroke();
+  if (type>0){ x.fillStyle=col; x.beginPath(); x.arc(px,py,Math.max(1.6,r*.3),0,7); x.fill(); }
+  else if (type<0){
+    const k=r*.55; x.beginPath();
+    x.moveTo(px-k,py-k); x.lineTo(px+k,py+k); x.moveTo(px+k,py-k); x.lineTo(px-k,py+k); x.stroke();
+  }
+  x.restore();
+}
+function tag(x,txt,px,py,col,align,size){
+  align = align || 'center';
+  x.font = '600 '+(size||12)+'px "Segoe UI",system-ui,sans-serif';
+  x.textAlign = align; x.textBaseline = 'middle';
+  const m = x.measureText(txt).width;
+  const lx = align==='center' ? px-m/2 : align==='left' ? px : px-m;
+  x.fillStyle = 'rgba(6,10,21,.82)'; x.fillRect(lx-5, py-10, m+10, 20);
+  x.fillStyle = col; x.fillText(txt, px, py);
+}
+function fmt(v,d){ return v.toLocaleString('es-CO',{minimumFractionDigits:d, maximumFractionDigits:d}); }
+function sci(v){
+  if (v===0) return '0';
+  const e = Math.floor(Math.log10(Math.abs(v))), m = v/Math.pow(10,e);
+  return fmt(m,2)+' × 10<sup>'+e+'</sup>';
+}
+
+/* ---------- SOLENOIDE ---------- */
+function solField(x0,x1,cy,R,W,H){
+  const lines=[], Lx=x1-x0, ext=Math.min(R*1.2,(W-x1)*0.85);
+  for (const hh of [0.62,0.3,-0.3,-0.62]){
+    const y = cy - hh*R, sg = Math.sign(hh);
+    let yo = cy - sg*(R*1.3 + (0.75-Math.abs(hh))*R*1.1);
+    yo = Math.max(10, Math.min(H-10, yo));
+    const inner = mk([[x0,y],[x1,y]]);
+    const pts = cub([x1,y],[x1+ext,y],[x1+ext,yo],[x1-Lx*.12,yo])
+      .concat([[x0+Lx*.12,yo]])
+      .concat(cub([x0+Lx*.12,yo],[x0-ext,yo],[x0-ext,y],[x0,y]));
+    lines.push({inner, outer:mk(pts)});
+  }
+  lines.push({inner:mk([[Math.max(8,x0-R*1.5),cy],[Math.min(W-8,x1+R*1.5),cy]]), outer:null});
+  return lines;
+}
+function drawOuter(x,lines,dir,off){
+  if (!dir || !S.outer) return;
+  x.lineWidth = 1.4; x.strokeStyle = 'rgba(34,211,238,.2)'; x.setLineDash([4,6]);
+  for (const l of lines) if (l.outer) stroke(x,l.outer);
+  x.setLineDash([]);
+  for (const l of lines) if (l.outer) flow(x,l.outer,95,off*.45,dir,'rgba(34,211,238,.45)',4.5);
+}
+function drawInner(x,lines,dir,off,mag){
+  if (!dir) return;
+  for (const l of lines){
+    x.strokeStyle = 'rgba(34,211,238,'+(0.4+0.5*mag)+')'; x.lineWidth = 2.2;
+    x.shadowColor = COL.B; x.shadowBlur = 4+8*mag; stroke(x,l.inner); x.shadowBlur = 0;
+    flow(x,l.inner,62,off,dir,COL.B,6.5+2*mag);
+  }
+}
+
+function drawSol3D(){
+  const {x,w,h} = fit($('c3d')); grid(x,w,h);
+  const N=S.N, I=S.I, dir=Math.sign(I), mag=Math.abs(I)/5;
+  const x0=w*(w<600?.16:.2), x1=w*(w<600?.84:.8), cy=h*.53, R=Math.min(h*.21,(x1-x0)*.22), rx=R*.32, pitch=(x1-x0)/N;
+  const P = th => [x0 + pitch*th/(2*Math.PI) + rx*Math.sin(th), cy - R*Math.cos(th)];
+  const lines = solField(x0,x1,cy,R,w,h);
+  const off = t*(30+70*mag);
+  const TH = 2*Math.PI*N, step = 0.05;
+
+  drawOuter(x,lines,dir,off);
+
+  const runs = front => {
+    x.beginPath(); let pen=false;
+    for (let th=0; th<=TH+1e-9; th+=step){
+      const s = Math.sin(th), ok = front ? s>=-0.04 : s<=0.04, p = P(th);
+      if (ok){ pen ? x.lineTo(p[0],p[1]) : x.moveTo(p[0],p[1]); pen=true; } else pen=false;
+    }
+    x.stroke();
+  };
+  // espiras traseras
+  x.strokeStyle='rgba(255,178,30,.32)'; x.lineWidth=2.4; runs(false);
+  // campo interior (entre la parte trasera y la delantera)
+  drawInner(x,lines,dir,off,mag);
+  // espiras delanteras
+  x.strokeStyle=COL.I; x.lineWidth=3.6; x.shadowColor=COL.I; x.shadowBlur=dir?10:0; runs(true); x.shadowBlur=0;
+
+  // cables de conexión
+  const s0=P(0), s1=P(TH);
+  const l0=[s0[0]-R*.55, s0[1]-R*.75], l1=[s1[0]+R*.55, s1[1]-R*.75];
+  x.strokeStyle=COL.I; x.lineWidth=3.6;
+  x.beginPath(); x.moveTo(l0[0],l0[1]); x.lineTo(s0[0],s0[1]); x.stroke();
+  x.beginPath(); x.moveTo(s1[0],s1[1]); x.lineTo(l1[0],l1[1]); x.stroke();
+  if (dir){
+    const a0=Math.atan2(s0[1]-l0[1], s0[0]-l0[0]), a1=Math.atan2(l1[1]-s1[1], l1[0]-s1[0]);
+    const m0=[(s0[0]+l0[0])/2,(s0[1]+l0[1])/2], m1=[(s1[0]+l1[0])/2,(s1[1]+l1[1])/2];
+    arrow(x,m0[0],m0[1],a0+(dir<0?Math.PI:0),8,COL.Ilight);
+    arrow(x,m1[0],m1[1],a1+(dir<0?Math.PI:0),8,COL.Ilight);
+    tag(x, dir>0?'I entra':'I sale', l0[0], l0[1]-14, COL.I);
+    tag(x, dir>0?'I sale':'I entra', l1[0], l1[1]-14, COL.I);
+  }
+
+  // flechas de corriente en las espiras delanteras
+  if (dir){
+    const D = 2*Math.PI/3, ph = (((t*(1.3+2.6*mag)*dir) % D) + D) % D;
+    for (let th=ph; th<=TH; th+=D){
+      if (Math.sin(th) < 0.2) continue;
+      const p=P(th), dx=pitch/(2*Math.PI)+rx*Math.cos(th), dy=R*Math.sin(th);
+      arrow(x,p[0],p[1],Math.atan2(dy,dx)+(dir<0?Math.PI:0),7.5,COL.Ilight);
+    }
+  }
+
+  // rótulos
+  if (dir){
+    const ex = Math.min(w-8, x1+R*1.5);
+    tag(x,'B', ex-14, cy-16, COL.B, 'center', 14);
+    tag(x, 'B interior: '+(dir>0?'→':'←'), (x0+x1)/2, cy + R + 22, COL.B);
+  } else {
+    tag(x,'I = 0  ⇒  no hay campo magnético', (x0+x1)/2, cy+R+22, COL.muted);
+  }
+  if (w>=600) tag(x,'N = '+N+' espiras', 70, 18, COL.muted, 'center', 11);
+}
+
+let secGeo = null, sDrag = null;
+function drawSec(){
+  const {x,w,h} = fit($('csec')); grid(x,w,h);
+  const N=S.N, I=S.I, dir=Math.sign(I), mag=Math.abs(I)/5;
+  const x0=w*.13, x1=w*.87, cy=h*.56, R=h*.2, d=(x1-x0)/N, rw=Math.min(d*.33,10);
+  const lines = solField(x0,x1,cy,R,w,h), off = t*(30+70*mag);
+
+  // paredes del tubo
+  x.strokeStyle='rgba(140,155,200,.18)'; x.lineWidth=1; x.setLineDash([2,5]);
+  x.beginPath(); x.moveTo(x0,cy-R); x.lineTo(x1,cy-R); x.moveTo(x0,cy+R); x.lineTo(x1,cy+R); x.stroke(); x.setLineDash([]);
+
+  drawOuter(x,lines,dir,off);
+  drawInner(x,lines,dir,off,mag);
+
+  // lazo amperiano
+  S.k = Math.min(S.k, N); S.j = Math.max(0, Math.min(S.j, N-S.k));
+  const left=x0+S.j*d, right=left+S.k*d, top=cy-R*1.8, bot=cy-R*.38;
+  x.fillStyle='rgba(255,79,163,.08)'; x.fillRect(left,top,right-left,bot-top);
+  x.strokeStyle=COL.A; x.lineWidth=2.2; x.setLineDash([7,5]); x.shadowColor=COL.A; x.shadowBlur=8;
+  x.strokeRect(left,top,right-left,bot-top); x.setLineDash([]); x.shadowBlur=0;
+  const loop = mk([[left,bot],[right,bot],[right,top],[left,top],[left,bot]]);
+  flow(x,loop,55,t*40,1,COL.A,6.5);
+
+  // alambres
+  for (let i=0;i<N;i++){
+    const xi = x0 + d*(i+.5), enc = i>=S.j && i<S.j+S.k;
+    sym(x,xi,cy-R,rw, dir, COL.I, enc && dir!==0);
+    sym(x,xi,cy+R,rw,-dir, COL.I, false);
+  }
+
+  // rótulos del lazo
+  tag(x,'exterior: B ≈ 0', (left+right)/2, top-14, COL.A, 'center', 11);
+  tag(x,'ℓ  ·  B ∥ dl', (left+right)/2, bot+14, COL.A, 'center', 11);
+  tag(x,'B ⊥ dl', right+6, (top+bot)/2 - 22, COL.muted, 'left', 10);
+  if (!dir) tag(x,'I = 0', w/2, cy, COL.muted);
+
+  secGeo = {x0,d,left,right,top,bot,N};
+}
+function updateSol(){
+  S.k = Math.min(S.k, S.N); S.j = Math.max(0, Math.min(S.j, S.N-S.k));
+  $('sK').max = S.N; $('sK').value = S.k;
+  $('sIv').textContent = fmt(S.I,1)+' A';
+  $('sNv').textContent = S.N;
+  $('sKv').textContent = S.k;
+  const n = S.N/L_SOL, l = S.k*L_SOL/S.N, circ = mu0*S.k*S.I, B = mu0*n*S.I;
+  $('solKV').innerHTML =
+    '<span>Espiras encerradas, N<sub>enc</sub></span><span>'+S.k+'</span>'+
+    '<span>Longitud del lazo, ℓ</span><span>'+fmt(l*100,2)+' cm</span>'+
+    '<span>I<sub>enc</sub> = N<sub>enc</sub> I</span><span>'+fmt(S.k*S.I,1)+' A</span>'+
+    '<span>∮ B·dl = μ<sub>0</sub> N<sub>enc</sub> I</span><span>'+sci(circ)+' T·m</span>'+
+    '<span>n = N<sub>enc</sub>/ℓ = N/L</span><span>'+fmt(n,0)+' espiras/m</span>';
+  $('solB').innerHTML = 'B = '+fmt(Math.abs(B)*1000,3)+' mT';
+  $('solDir').textContent = S.I>0 ? 'Dirección: → (hacia la derecha)' : S.I<0 ? 'Dirección: ← (hacia la izquierda)' : 'Sin corriente, sin campo';
+}
+
+/* ---------- TOROIDE ---------- */
+let torGeo = null, tDrag = false;
+function circlePath(cx,cy,r){
+  const pts=[]; for (let i=0;i<=140;i++){ const f=2*Math.PI*i/140; pts.push([cx+r*Math.cos(f), cy-r*Math.sin(f)]); }
+  return mk(pts);
+}
+function drawTor(){
+  const {x,w,h} = fit($('ctor')); grid(x,w,h);
+  const N=T.N, I=T.I, dir=Math.sign(I), mag=Math.abs(I)/5;
+  const cx=w/2, cy=h/2, b=Math.min(w,h)*(w<600?.36:.345), a=b*.5, sc=b/B_T;
+  const off = t*(28+60*mag);
+
+  // núcleo
+  const g = x.createRadialGradient(cx,cy,a,cx,cy,b);
+  g.addColorStop(0,'rgba(40,60,120,.45)'); g.addColorStop(.5,'rgba(30,48,100,.32)'); g.addColorStop(1,'rgba(40,60,120,.45)');
+  x.fillStyle=g; x.beginPath(); x.arc(cx,cy,b,0,2*Math.PI); x.moveTo(cx+a,cy); x.arc(cx,cy,a,0,2*Math.PI,true); x.fill();
+  x.strokeStyle='rgba(150,170,220,.35)'; x.lineWidth=1.2;
+  x.beginPath(); x.arc(cx,cy,a,0,7); x.stroke(); x.beginPath(); x.arc(cx,cy,b,0,7); x.stroke();
+
+  // campo B
+  if (dir){
+    for (const f of [.2,.5,.8]){
+      const r = a+(b-a)*f, p = circlePath(cx,cy,r);
+      const strength = (a/r);
+      x.strokeStyle='rgba(34,211,238,'+(0.35+0.5*mag*strength)+')'; x.lineWidth=2.2;
+      x.shadowColor=COL.B; x.shadowBlur=4+8*mag; stroke(x,p); x.shadowBlur=0;
+      flow(x,p,62,off*(a/r),dir,COL.B,6.5+2*mag);
+    }
+  }
+
+  // espiras
+  const rs = Math.min(7.5, (2*Math.PI*a/N)*.32);
+  const encIn = T.r > A_T, encOut = T.r > B_T;
+  for (let i=0;i<N;i++){
+    const f = 2*Math.PI*i/N + Math.PI/N;
+    const pi=[cx+a*Math.cos(f), cy-a*Math.sin(f)], po=[cx+b*Math.cos(f), cy-b*Math.sin(f)];
+    x.strokeStyle=COL.I; x.lineWidth=3.2; x.shadowColor=COL.I; x.shadowBlur=dir?8:0;
+    x.beginPath(); x.moveTo(pi[0],pi[1]); x.lineTo(po[0],po[1]); x.stroke(); x.shadowBlur=0;
+    if (dir){
+      const p = mk([pi,po]);
+      flow(x,p,(b-a)/2,off*.6,dir,COL.Ilight,5.5);
+    }
+    sym(x,pi[0],pi[1],rs, dir, COL.I, encIn && dir!==0);
+    sym(x,po[0],po[1],rs,-dir, COL.I, encOut && dir!==0);
+  }
+
+  // lazo amperiano
+  const r = T.r*sc;
+  x.strokeStyle=COL.A; x.lineWidth=2.3; x.setLineDash([8,6]); x.shadowColor=COL.A; x.shadowBlur=9;
+  x.beginPath(); x.arc(cx,cy,r,0,7); x.stroke(); x.setLineDash([]); x.shadowBlur=0;
+  flow(x,circlePath(cx,cy,r),80,t*38,1,COL.A,7);
+
+  // radio
+  const ang = -0.65, pe=[cx+r*Math.cos(ang), cy-r*Math.sin(ang)];
+  x.strokeStyle='rgba(255,79,163,.7)'; x.lineWidth=1.4;
+  x.beginPath(); x.moveTo(cx,cy); x.lineTo(pe[0],pe[1]); x.stroke();
+  x.fillStyle=COL.A; x.beginPath(); x.arc(cx,cy,3,0,7); x.fill();
+  tag(x,'r', (cx+pe[0])/2+10, (cy+pe[1])/2-10, COL.A, 'center', 13);
+
+  // rótulos de regiones
+  tag(x,'a', cx-a*Math.cos(.5)-2, cy-a*Math.sin(.5), COL.muted, 'center', 11);
+  tag(x,'b', cx-b*Math.cos(.5)-10, cy-b*Math.sin(.5)-6, COL.muted, 'center', 11);
+  tag(x,'B = 0', cx, cy+a*.5, COL.muted, 'center', 11);
+  tag(x,'exterior: B = 0', Math.max(70,cx-b*1.05), Math.max(18,cy-b*1.15), COL.muted, 'center', 11);
+  if (dir) tag(x,'B: '+(dir>0?'antihorario ↺':'horario ↻'), cx, Math.min(h-16, cy+b+30), COL.B, 'center', 12);
+  else tag(x,'I = 0  ⇒  no hay campo', cx, Math.min(h-16, cy+b+30), COL.muted);
+
+  torGeo = {cx,cy,sc};
+}
+function drawTor3D(){
+  const {x,w,h} = fit($('c3dt')); grid(x,w,h);
+  const N=T.N, I=T.I, dir=Math.sign(I), mag=Math.abs(I)/5;
+  const e=0.6, se=Math.sin(e), ce=Math.cos(e);
+  const b=Math.min(w*(w<600?0.42:0.36),(h*0.40)/(se+0.25*ce)), Rm=0.75*b, rm=0.25*b, sc=b/B_T;
+  const cx=w/2, cy=h*0.5;
+  const pr=(X,Y,Z)=>[cx+X, cy-(Z*ce+Y*se), -Y*ce+Z*se];
+  const tp=(phi,th)=>{ const rho=Rm+rm*Math.cos(th); return pr(rho*Math.cos(phi), rho*Math.sin(phi), rm*Math.sin(th)); };
+  const face=(phi,th)=>-Math.cos(th)*Math.sin(phi)*ce + Math.sin(th)*se;
+  const items=[];
+
+  // núcleo (malla translúcida)
+  const NP=72, NT=18;
+  for (let i=0;i<NP;i++) for (let j=0;j<NT;j++){
+    const f0=2*Math.PI*i/NP, f1=2*Math.PI*(i+1)/NP, t0=2*Math.PI*j/NT, t1=2*Math.PI*(j+1)/NT;
+    const q=[tp(f0,t0),tp(f1,t0),tp(f1,t1),tp(f0,t1)];
+    items.push({d:(q[0][2]+q[1][2]+q[2][2]+q[3][2])/4, k:0, q, f:face((f0+f1)/2,(t0+t1)/2)});
+  }
+  // espiras: hélice toroidal; la corriente (I>0) avanza en +u, es decir, en -θ
+  const U=2*Math.PI*N, steps=N*30;
+  const wp=u=>tp(u/N,-u);
+  for (let s=0;s<steps;s++){
+    const u0=s/steps*U, u1=(s+1)/steps*U, p0=wp(u0), p1=wp(u1), um=(u0+u1)/2;
+    items.push({d:(p0[2]+p1[2])/2+0.3, k:1, p0, p1, f:face(um/N,-um)});
+  }
+  if (dir){
+    const D=2*Math.PI/3, ph=(((t*(1.3+2.6*mag)*dir)%D)+D)%D;
+    for (let u=ph; u<U; u+=D){
+      const f=face(u/N,-u); if (f<0.15) continue;
+      const p=wp(u), q=wp(u+0.02*dir);
+      items.push({d:p[2]+0.6, k:4, p, a:Math.atan2(q[1]-p[1],q[0]-p[0])});
+    }
+  }
+  // campo B (circunferencias dentro del núcleo, Z = 0)
+  if (dir){
+    for (const rho of [Rm-0.5*rm, Rm, Rm+0.5*rm]){
+      const al=0.45+0.45*mag*(Rm-0.5*rm)/rho;
+      for (let i=0;i<120;i++){
+        const f0=2*Math.PI*i/120, f1=2*Math.PI*(i+1)/120;
+        const p0=pr(rho*Math.cos(f0),rho*Math.sin(f0),0), p1=pr(rho*Math.cos(f1),rho*Math.sin(f1),0);
+        items.push({d:(p0[2]+p1[2])/2, k:2, p0, p1, al});
+      }
+      const n=12, off=t*(0.35+0.6*mag)*(Rm/rho)*dir;
+      for (let kk=0;kk<n;kk++){
+        const f=2*Math.PI*kk/n+off, p=pr(rho*Math.cos(f),rho*Math.sin(f),0), q=pr(rho*Math.cos(f+0.02*dir),rho*Math.sin(f+0.02*dir),0);
+        items.push({d:p[2]+0.1, k:5, p, a:Math.atan2(q[1]-p[1],q[0]-p[0])});
+      }
+    }
+  }
+  // lazo amperiano (Z = 0)
+  const ra=T.r*sc;
+  for (let i=0;i<160;i++){
+    if (i%2) continue;
+    const f0=2*Math.PI*i/160, f1=2*Math.PI*(i+1)/160;
+    const p0=pr(ra*Math.cos(f0),ra*Math.sin(f0),0), p1=pr(ra*Math.cos(f1),ra*Math.sin(f1),0);
+    items.push({d:(p0[2]+p1[2])/2, k:3, p0, p1});
+  }
+  for (let kk=0;kk<8;kk++){
+    const f=2*Math.PI*kk/8+t*0.35, p=pr(ra*Math.cos(f),ra*Math.sin(f),0), q=pr(ra*Math.cos(f+0.02),ra*Math.sin(f+0.02),0);
+    items.push({d:p[2]+0.1, k:6, p, a:Math.atan2(q[1]-p[1],q[0]-p[0])});
+  }
+
+  items.sort((A,B)=>A.d-B.d);
+  for (const it of items){
+    switch(it.k){
+      case 0: {
+        const l=Math.max(0,it.f), al=it.f>0?0.2:0.1;
+        x.fillStyle='rgba('+(45+50*l|0)+','+(65+60*l|0)+','+(130+80*l|0)+','+al+')';
+        x.strokeStyle='rgba(120,145,215,'+(it.f>0?0.08:0.04)+')'; x.lineWidth=0.6;
+        x.beginPath(); x.moveTo(it.q[0][0],it.q[0][1]); for (let m=1;m<4;m++) x.lineTo(it.q[m][0],it.q[m][1]); x.closePath(); x.fill(); x.stroke();
+        break; }
+      case 1:
+        x.strokeStyle = it.f>0 ? COL.I : 'rgba(255,178,30,.3)'; x.lineWidth = it.f>0 ? 3 : 2;
+        x.beginPath(); x.moveTo(it.p0[0],it.p0[1]); x.lineTo(it.p1[0],it.p1[1]); x.stroke();
+        break;
+      case 2:
+        x.strokeStyle='rgba(34,211,238,'+it.al+')'; x.lineWidth=2.2;
+        x.beginPath(); x.moveTo(it.p0[0],it.p0[1]); x.lineTo(it.p1[0],it.p1[1]); x.stroke();
+        break;
+      case 3:
+        x.strokeStyle=COL.A; x.lineWidth=2.2;
+        x.beginPath(); x.moveTo(it.p0[0],it.p0[1]); x.lineTo(it.p1[0],it.p1[1]); x.stroke();
+        break;
+      case 4: arrow(x,it.p[0],it.p[1],it.a,7,COL.Ilight); break;
+      case 5: arrow(x,it.p[0],it.p[1],it.a,7+2*mag,COL.B); break;
+      case 6: arrow(x,it.p[0],it.p[1],it.a,6.5,COL.A); break;
+    }
+  }
+
+  // rótulos
+  const top=tp(Math.PI/2,Math.PI/2);
+  if (w>=600) tag(x,'N = '+N+' espiras', 70, 18, COL.muted, 'center', 11);
+  if (dir){
+    tag(x,'B: '+(dir>0?'antihorario ↺':'horario ↻')+' visto desde arriba', cx, Math.min(h-14, cy+(b*1.0)*se+rm*ce+22), COL.B);
+    tag(x,'I: sube por dentro ⊙, baja por fuera ⊗', cx, Math.max(14, cy-b*se-rm*ce-20), COL.I, 'center', 11);
+  } else {
+    tag(x,'I = 0  ⇒  no hay campo', cx, Math.min(h-14, cy+b*se+rm*ce+22), COL.muted);
+  }
+  tag(x,'r', cx+ra+10, cy, COL.A, 'left', 12);
+}
+
+function drawGraph(){
+  const {x,w,h} = fit($('cgraph'));
+  const pl=48, pr=14, pt=14, pb=36, gw=w-pl-pr, gh=h-pt-pb;
+  const rmax=0.14, Bmax=0.85e-3;
+  const X = r => pl + r/rmax*gw, Y = B => pt + gh - B/Bmax*gh;
+  // regiones
+  x.fillStyle='rgba(120,140,190,.06)'; x.fillRect(X(0),pt,X(A_T)-X(0),gh);
+  x.fillStyle='rgba(34,211,238,.08)'; x.fillRect(X(A_T),pt,X(B_T)-X(A_T),gh);
+  x.fillStyle='rgba(120,140,190,.06)'; x.fillRect(X(B_T),pt,X(rmax)-X(B_T),gh);
+  // ejes y marcas
+  x.strokeStyle='rgba(140,155,200,.25)'; x.lineWidth=1;
+  x.font='11px "Segoe UI",system-ui,sans-serif'; x.fillStyle=COL.muted;
+  x.textAlign='center'; x.textBaseline='top';
+  for (let r=0; r<=rmax+1e-9; r+=0.02){ x.beginPath(); x.moveTo(X(r),pt+gh); x.lineTo(X(r),pt+gh+4); x.stroke(); x.fillText(fmt(r*100,0),X(r),pt+gh+6); }
+  x.textAlign='right'; x.textBaseline='middle';
+  for (let B=0; B<=Bmax+1e-12; B+=0.2e-3){
+    x.strokeStyle='rgba(140,155,200,.1)'; x.beginPath(); x.moveTo(pl,Y(B)); x.lineTo(pl+gw,Y(B)); x.stroke();
+    x.fillText(fmt(B*1000,1),pl-6,Y(B));
+  }
+  x.strokeStyle='rgba(140,155,200,.5)'; x.beginPath(); x.moveTo(pl,pt); x.lineTo(pl,pt+gh); x.lineTo(pl+gw,pt+gh); x.stroke();
+  x.textAlign='center'; x.textBaseline='bottom'; x.fillText('r (cm)', pl+gw/2, h-2);
+  x.save(); x.translate(12,pt+gh/2); x.rotate(-Math.PI/2); x.textBaseline='middle'; x.fillText('|B| (mT)',0,0); x.restore();
+  // a y b
+  x.setLineDash([3,4]); x.strokeStyle='rgba(140,155,200,.45)';
+  [A_T,B_T].forEach(v=>{ x.beginPath(); x.moveTo(X(v),pt); x.lineTo(X(v),pt+gh); x.stroke(); });
+  x.setLineDash([]);
+  x.fillStyle=COL.muted; x.textBaseline='top'; x.fillText('a',X(A_T)+8,pt+2); x.fillText('b',X(B_T)+8,pt+2);
+  // curva
+  const k = mu0*T.N*Math.abs(T.I)/(2*Math.PI);
+  x.strokeStyle=COL.B; x.lineWidth=2.6; x.shadowColor=COL.B; x.shadowBlur=6;
+  x.beginPath(); x.moveTo(X(0),Y(0)); x.lineTo(X(A_T),Y(0)); x.stroke();
+  x.beginPath();
+  for (let i=0;i<=80;i++){ const r=A_T+(B_T-A_T)*i/80; const p=[X(r),Y(Math.min(Bmax,k/r))]; i? x.lineTo(p[0],p[1]) : x.moveTo(p[0],p[1]); }
+  x.stroke();
+  x.beginPath(); x.moveTo(X(B_T),Y(0)); x.lineTo(X(rmax),Y(0)); x.stroke(); x.shadowBlur=0;
+  if (k>0){
+    x.setLineDash([2,4]); x.lineWidth=1.3; x.strokeStyle='rgba(34,211,238,.5)';
+    x.beginPath(); x.moveTo(X(A_T),Y(0)); x.lineTo(X(A_T),Y(Math.min(Bmax,k/A_T))); x.stroke();
+    x.beginPath(); x.moveTo(X(B_T),Y(0)); x.lineTo(X(B_T),Y(k/B_T)); x.stroke();
+    x.setLineDash([]);
+  }
+  // punto actual
+  const Bn = (T.r>A_T && T.r<=B_T) ? k/T.r : 0;
+  x.strokeStyle='rgba(255,79,163,.5)'; x.lineWidth=1; x.beginPath(); x.moveTo(X(T.r),pt); x.lineTo(X(T.r),pt+gh); x.stroke();
+  x.fillStyle=COL.A; x.shadowColor=COL.A; x.shadowBlur=10; x.beginPath(); x.arc(X(T.r),Y(Math.min(Bmax,Bn)),5.5,0,7); x.fill(); x.shadowBlur=0;
+}
+function updateTor(){
+  const r=T.r, N=T.N, I=T.I;
+  $('tIv').textContent = fmt(I,1)+' A';
+  $('tNv').textContent = N;
+  $('tRv').textContent = fmt(r*100,1)+' cm';
+  $('tR').value = (r*100).toFixed(1);
+  let region, col, Ienc, txt;
+  if (r < A_T){ region='Hueco central · r < a'; col='#8d99b8'; Ienc=0; txt='0 (ningún alambre)'; }
+  else if (r <= B_T){ region='Núcleo · a < r < b'; col='#22d3ee'; Ienc=N*I; txt='N·I = '+N+' × '+fmt(I,1)+' A = '+fmt(N*I,1)+' A'; }
+  else { region='Exterior · r > b'; col='#8d99b8'; Ienc=0; txt='N·I − N·I = 0'; }
+  const B = mu0*Ienc/(2*Math.PI*r);
+  const el = $('tRegion'); el.textContent=region; el.style.color=col; el.style.borderColor=col;
+  $('torKV').innerHTML =
+    '<span>Radio del lazo, r</span><span>'+fmt(r*100,1)+' cm</span>'+
+    '<span>Longitud del lazo, 2πr</span><span>'+fmt(2*Math.PI*r*100,1)+' cm</span>'+
+    '<span>Corriente encerrada, I<sub>enc</sub></span><span>'+txt+'</span>'+
+    '<span>B = μ<sub>0</sub> I<sub>enc</sub> / (2πr)</span><span>'+sci(Math.abs(B))+' T</span>';
+  $('torB').textContent = 'B = '+fmt(Math.abs(B)*1000,3)+' mT';
+  $('torDir').textContent = Ienc===0 ? (I===0?'Sin corriente':'Campo nulo en esta región')
+    : (I>0 ? 'Sentido antihorario (visto desde arriba)' : 'Sentido horario (visto desde arriba)');
+}
+
+/* ---------- eventos ---------- */
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('.tab').forEach(o => o.setAttribute('aria-selected', o===b ? 'true' : 'false'));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id===tab));
+}));
+$('sI').addEventListener('input', e => { S.I=+e.target.value; updateSol(); });
+$('sN').addEventListener('input', e => { S.N=+e.target.value; updateSol(); });
+$('sK').addEventListener('input', e => { S.k=+e.target.value; updateSol(); });
+$('sFlip').addEventListener('click', () => { S.I=-S.I; $('sI').value=S.I; updateSol(); });
+$('sOuter').addEventListener('click', e => { S.outer=!S.outer; e.currentTarget.classList.toggle('on', S.outer); });
+$('tI').addEventListener('input', e => { T.I=+e.target.value; updateTor(); });
+$('tN').addEventListener('input', e => { T.N=+e.target.value; updateTor(); });
+$('tR').addEventListener('input', e => { T.r=+e.target.value/100; updateTor(); });
+$('tFlip').addEventListener('click', () => { T.I=-T.I; $('tI').value=T.I; updateTor(); });
+document.querySelectorAll('.pauseBtn').forEach(b => b.addEventListener('click', () => {
+  paused = !paused;
+  document.querySelectorAll('.pauseBtn').forEach(o => { o.textContent = paused ? '▶ Reanudar' : '❚❚ Pausar'; o.classList.toggle('on', paused); });
+}));
+
+const pos = (c,e) => { const r=c.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+const csec = $('csec');
+csec.addEventListener('pointerdown', e => {
+  if (!secGeo) return; const [mx,my] = pos(csec,e), g=secGeo;
+  if (mx>g.left-12 && mx<g.right+12 && my>g.top-12 && my<g.bot+12){
+    sDrag = {grab: mx-g.left}; csec.setPointerCapture(e.pointerId); csec.style.cursor='grabbing';
+  }
+});
+csec.addEventListener('pointermove', e => {
+  if (!secGeo) return; const [mx,my] = pos(csec,e), g=secGeo;
+  if (sDrag){
+    S.j = Math.round((mx - sDrag.grab - g.x0)/g.d); updateSol();
+  } else {
+    csec.style.cursor = (mx>g.left-12 && mx<g.right+12 && my>g.top-12 && my<g.bot+12) ? 'grab' : 'default';
+  }
+});
+['pointerup','pointercancel'].forEach(ev => csec.addEventListener(ev, () => { sDrag=null; csec.style.cursor='grab'; }));
+
+const ctor = $('ctor');
+const setR = e => {
+  if (!torGeo) return; const [mx,my] = pos(ctor,e);
+  T.r = Math.max(0.005, Math.min(0.135, Math.hypot(mx-torGeo.cx, my-torGeo.cy)/torGeo.sc));
+  updateTor();
+};
+ctor.addEventListener('pointerdown', e => { tDrag=true; ctor.setPointerCapture(e.pointerId); setR(e); });
+ctor.addEventListener('pointermove', e => { if (tDrag) setR(e); });
+['pointerup','pointercancel'].forEach(ev => ctor.addEventListener(ev, () => { tDrag=false; }));
+ctor.style.cursor = 'crosshair';
+
+/* ---------- animación ---------- */
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now-last)/1000); last = now;
+  if (!paused) t += dt;
+  if (tab==='sol'){ drawSol3D(); drawSec(); } else { drawTor3D(); drawTor(); drawGraph(); }
+  requestAnimationFrame(loop);
+}
+updateSol(); updateTor();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
